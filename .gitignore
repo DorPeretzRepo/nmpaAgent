@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite DBs and journals
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# Virtual environment
+.env
+venv/
+
+# Mac/IDE files
+.DS_Store
+.vscode/
+.idea/
+
+# Agent artifacts
+agent_intelligence.json
+ports_history.json
+last_run_summary.json
+
+# backups
+*nmap_agent_backup.py
+*nmap_agent_corrupted.py
+

@@ -1,0 +1,102 @@
+[
+  {
+    "task": "without exploiting find all this machine volunarabilities you can",
+    "handling": "LLM failed, used fallback logic",
+    "expected": "10-30s",
+    "actual": "fallback used"
+  },
+  {
+    "task": "scan network for open ports",
+    "handling": "LLM failed, used fallback logic",
+    "expected": "10-30s",
+    "actual": "fallback used"
+  },
+  {
+    "task": "find the smart tv in this network and find all the 4 vulnerabilities in less than 50 seconds",
+    "handling": "fast_track mode, 3 commands",
+    "expected": "50s",
+    "actual": "44.7s",
+    "status": "failed",
+    "vulnerabilities_found": 0,
+    "execution_time": "did not compleret"
+  },
+  {
+    "task": "find the smart tv in this network and find all the 4 vulnerabilities in less than 50 seconds",
+    "mode": "fast_track",
+    "calls": 3,
+    "elapsed": 55.97,
+    "indicators": 0,
+    "status": "no_findings"
+  },
+  {
+    "task": "locate smart television device and scan for security issues quickly",
+    "mode": "standard",
+    "strategy": "iot_specialist",
+    "plan_len": 1,
+    "elapsed": 84.98,
+    "indicators": 0,
+    "severity": {
+      "score": 0,
+      "label": "none",
+      "cve_count": 0,
+      "critical_terms": 0
+    },
+    "candidate_brand": null,
+    "microstats": {
+      "ping_done": 43.35,
+      "candidate_selected": 43.35
+    },
+    "status": "no_findings"
+  },
+  {
+    "task": "scan for tv device vulnerabilities in 50 seconds",
+    "mode": "fast_track",
+    "calls": 3,
+    "elapsed": 54.66,
+    "indicators": 0,
+    "status": "no_findings"
+  },
+  {
+    "task": "find the smart tv and check for vulnerabilities in 50 seconds",
+    "mode": "fast_track",
+    "calls": 3,
+    "execution_time_sec": 52.4,
+    "indicators_of_vuln": 0,
+    "status": "no_findings"
+  },
+  {
+    "task": "find smart tv and scan for vulnerabilities in 50 seconds",
+    "mode": "fast_track",
+    "calls": 3,
+    "execution_time_sec": 51.54,
+    "indicators_of_vuln": 0,
+    "status": "no_findings"
+  },
+  {
+    "task": "Scan this network for devices",
+    "mode": "error_fallback",
+    "execution_time_sec": 13.74,
+    "status": "error"
+  },
+  {
+    "task": "analyze network security on 192.168.1.101",
+    "mode": "error_fallback",
+    "execution_time_sec": 18.61,
+    "status": "error"
+  },
+  {
+    "task": "list machines",
+    "mode": "enumeration",
+    "hosts_found": 8,
+    "execution_time_sec": 0.56
+  },
+  {
+    "task": "Scan this network for devices",
+    "mode": "standard",
+    "strategy": "task_decomposer",
+    "calls": 3,
+    "execution_time_sec": 58.74,
+    "indicators_of_vuln": 0,
+    "status": "no_findings"
+  }
+]

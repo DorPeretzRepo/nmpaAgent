@@ -1,0 +1,824 @@
+{
+  "manifest_version": "1.0",
+  "generated_at": "2025-10-09T00:00:00Z",
+  "description": "Compact JSON manifest describing a small Nmap function set and exactly which fields each verbosity level returns. Designed for a local LLM agent to load on startup.",
+  "functions": [
+    {
+      "name": "ping_discovery",
+      "signature": "ping_discovery(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Confirm reachability and basic responsiveness.",
+      "cost": 1,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 40,
+              "example": "host_up: true; rtt: 12ms"
+            }
+          ],
+          "when_to_choose": "Quick health check or loop starter; smallest context."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "host_up",
+              "type": "bool"
+            },
+            {
+              "name": "rtt_ms",
+              "type": "number",
+              "precision": 1
+            },
+            {
+              "name": "ip_version",
+              "type": "string",
+              "enum": [
+                "ipv4",
+                "ipv6"
+              ]
+            },
+            {
+              "name": "notes",
+              "type": "string",
+              "max_length": 120
+            }
+          ],
+          "when_to_choose": "Default mode for decisions requiring basic responsiveness info."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "host_up",
+              "type": "bool"
+            },
+            {
+              "name": "rtt_ms",
+              "type": "number"
+            },
+            {
+              "name": "ip_version",
+              "type": "string"
+            },
+            {
+              "name": "response_types",
+              "type": "array",
+              "items": "string",
+              "example": [
+                "ICMP",
+                "TCP-SYN"
+              ]
+            },
+            {
+              "name": "probe_count",
+              "type": "integer"
+            },
+            {
+              "name": "raw_probe_sample",
+              "type": "string",
+              "max_length": 240
+            }
+          ],
+          "when_to_choose": "Investigating timing anomalies or mixed response types."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string",
+              "description": "Pointer to full raw output"
+            }
+          ],
+          "when_to_choose": "Operator troubleshooting only; raw output kept off-context."
+        }
+      }
+    },
+    {
+      "name": "top_ports_scan",
+      "signature": "top_ports_scan(target: str, verbosity: str = \"summary\", ports: list = [common]) -> ScanResultSummary",
+      "purpose": "Fast, low-noise scan of most common TCP ports.",
+      "cost": 2,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 60,
+              "example": "3 open (22,80,443)"
+            }
+          ],
+          "when_to_choose": "Frequent repetition where only novelty matters."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "scan_id",
+              "type": "string"
+            },
+            {
+              "name": "host_up",
+              "type": "bool"
+            },
+            {
+              "name": "open_ports",
+              "type": "array",
+              "items": "integer",
+              "max_items": 12
+            },
+            {
+              "name": "services",
+              "type": "object",
+              "description": "map port -> short service name"
+            }
+          ],
+          "when_to_choose": "Default for decision loops — gives immediate actionable facts."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "scan_id",
+              "type": "string"
+            },
+            {
+              "name": "host_up",
+              "type": "bool"
+            },
+            {
+              "name": "port_details",
+              "type": "array",
+              "items": {
+                "port": "integer",
+                "proto": "string",
+                "service": "string",
+                "product": "string?",
+                "version": "string?",
+                "confidence": "number"
+              }
+            },
+            {
+              "name": "new_ports",
+              "type": "array",
+              "items": "integer"
+            },
+            {
+              "name": "closed_ports",
+              "type": "array",
+              "items": "integer"
+            },
+            {
+              "name": "notes",
+              "type": "string",
+              "max_length": 200
+            }
+          ],
+          "when_to_choose": "Needed when product/version/confidence or diffs determine next actions."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Offline analyst review or operator request."
+        }
+      }
+    },
+    {
+      "name": "service_discovery",
+      "signature": "service_discovery(target: str, ports: list, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Retrieve safe banners and identify services on specific ports.",
+      "cost": 3,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 80,
+              "example": "port 80:http; port 22:ssh"
+            }
+          ],
+          "when_to_choose": "Confirm ports match previous scan; minimal confirmation."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "scan_id",
+              "type": "string"
+            },
+            {
+              "name": "services",
+              "type": "object",
+              "description": "map port -> {service, banner_short}"
+            },
+            {
+              "name": "issues_flag",
+              "type": "array",
+              "items": "string"
+            }
+          ],
+          "when_to_choose": "Typical default when LLM needs to know what services exist and short banners."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "scan_id",
+              "type": "string"
+            },
+            {
+              "name": "service_details",
+              "type": "array",
+              "items": {
+                "port": "integer",
+                "proto": "string",
+                "service": "string",
+                "product": "string?",
+                "version": "string?",
+                "cpe": "string?",
+                "confidence": "number"
+              }
+            },
+            {
+              "name": "scripts_summary",
+              "type": "array",
+              "items": {
+                "name": "string",
+                "excerpt": "string (<=240 chars)"
+              }
+            },
+            {
+              "name": "redaction_notes",
+              "type": "string",
+              "max_length": 240
+            }
+          ],
+          "when_to_choose": "When version/product or script outputs determine the next strategy."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Operator-approved raw retrieval."
+        }
+      }
+    },
+    {
+      "name": "version_detection",
+      "signature": "version_detection(target: str, ports: list, verbosity: str = \"detailed\") -> ScanResultSummary",
+      "purpose": "Conservative version probing and CPE extraction. Slightly more intrusive.",
+      "cost": 4,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 80,
+              "example": "port 80: Apache 2.4.18 (est); confidence 0.7"
+            }
+          ],
+          "when_to_choose": "If only a quick approximate version is needed."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "versions",
+              "type": "object",
+              "description": "map port -> {product, version, confidence}"
+            },
+            {
+              "name": "cpe_list",
+              "type": "array",
+              "items": "string"
+            }
+          ],
+          "when_to_choose": "When LLM needs version info but token budget is limited."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "versions",
+              "type": "object"
+            },
+            {
+              "name": "evidence",
+              "type": "array",
+              "items": "string",
+              "max_length_each": 240
+            },
+            {
+              "name": "known_vuln_tags",
+              "type": "array",
+              "items": "string",
+              "description": "CVE identifiers only, no exploit text"
+            },
+            {
+              "name": "confidence_scores",
+              "type": "object",
+              "description": "map port->confidence float"
+            }
+          ],
+          "when_to_choose": "Default for this function: required to evaluate possible known issues; surface CVE IDs only, do not advise exploit."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Save for offline forensic review; operator approval required."
+        }
+      },
+      "safety_note": "If CVE identifiers appear, agent must not produce exploit instructions. CVE IDs are allowed as identifiers only."
+    },
+    {
+      "name": "script_lookup",
+      "signature": "script_lookup(target: str, scripts: list, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Run specified NSE scripts and summarize results.",
+      "cost": 2,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 80,
+              "example": "http-title: Example Domain"
+            }
+          ],
+          "when_to_choose": "Very fast confirmation of a script's top-line output."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "scripts_summary",
+              "type": "array",
+              "items": {
+                "name": "string",
+                "short_summary": "string <=140 chars"
+              }
+            },
+            {
+              "name": "script_tags",
+              "type": "array",
+              "items": "string"
+            }
+          ],
+          "when_to_choose": "Default: gives per-script short results suitable for reasoning."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "scripts_summary",
+              "type": "array"
+            },
+            {
+              "name": "script_output_excerpt",
+              "type": "array",
+              "items": {
+                "name": "string",
+                "excerpt": "string <=240 chars"
+              }
+            },
+            {
+              "name": "script_confidence",
+              "type": "object"
+            }
+          ],
+          "when_to_choose": "When a script's output is ambiguous or high-priority and more context is necessary."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Operator review or forensic analysis only."
+        }
+      }
+    },
+    {
+      "name": "traceroute_discovery",
+      "signature": "traceroute_discovery(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Get network path/peering information with low noise.",
+      "cost": 1,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 60,
+              "example": "hops: 7; last_hop_rtt: 28ms"
+            }
+          ],
+          "when_to_choose": "Quick path overview."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "hops_count",
+              "type": "integer"
+            },
+            {
+              "name": "last_hop_rtt_ms",
+              "type": "number"
+            },
+            {
+              "name": "hop_overview",
+              "type": "array",
+              "items": {
+                "hop_index": "integer",
+                "host_token": "string"
+              },
+              "max_items": 6
+            }
+          ],
+          "when_to_choose": "Default for understanding path and basic peering."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "hop_list",
+              "type": "array",
+              "items": {
+                "index": "integer",
+                "ip_token": "string",
+                "rtt_ms": "number",
+                "resolved_name_truncated": "string"
+              },
+              "max_items": 12
+            }
+          ],
+          "when_to_choose": "When detailed path analysis is required."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Offline inspection or operator-requested raw data."
+        }
+      }
+    },
+    {
+      "name": "save_raw_output",
+      "signature": "save_raw_output(scan_id: str, encrypt: bool = true) -> {raw_pointer, size_bytes, encrypted, checksum}",
+      "purpose": "Utility: persist raw scan output encrypted and return pointer metadata.",
+      "cost": 0,
+      "allowed_verbosity": [
+        "raw"
+      ],
+      "verbosity_map": {
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            },
+            {
+              "name": "size_bytes",
+              "type": "integer"
+            },
+            {
+              "name": "checksum",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Used by adapter to store raw outputs off-context; returned pointer only."
+        }
+      }
+    },
+    {
+      "name": "os_detection",
+      "signature": "os_detection(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Detect the operating system of the target host.",
+      "cost": 3,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 50,
+              "example": "OS: Linux; accuracy: 90%"
+            }
+          ],
+          "when_to_choose": "Quick OS overview."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "os_name",
+              "type": "string"
+            },
+            {
+              "name": "accuracy",
+              "type": "number"
+            },
+            {
+              "name": "os_family",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Default for OS info."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "os_details",
+              "type": "object",
+              "description": "map of OS attributes"
+            },
+            {
+              "name": "fingerprints",
+              "type": "array",
+              "items": "string",
+              "max_items": 5
+            }
+          ],
+          "when_to_choose": "Detailed OS analysis."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Raw OS detection data."
+        }
+      }
+    },
+    {
+      "name": "full_port_scan",
+      "signature": "full_port_scan(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Scan all 65535 ports on the target.",
+      "cost": 5,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 60,
+              "example": "Open ports: 5 (22,80,443,8080,8443)"
+            }
+          ],
+          "when_to_choose": "Quick port count."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "open_ports",
+              "type": "array",
+              "items": "integer"
+            },
+            {
+              "name": "closed_ports_count",
+              "type": "integer"
+            }
+          ],
+          "when_to_choose": "List of open ports."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "port_states",
+              "type": "object",
+              "description": "map port -> state"
+            },
+            {
+              "name": "services",
+              "type": "object"
+            }
+          ],
+          "when_to_choose": "Full port details."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Raw port scan data."
+        }
+      }
+    },
+    {
+      "name": "aggressive_scan",
+      "signature": "aggressive_scan(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Perform aggressive scan including OS detection, version probing, and safe scripts.",
+      "cost": 5,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "verbosity_map": {
+        "minimal": {
+          "fields": [
+            {
+              "name": "summary",
+              "type": "string",
+              "max_length": 100,
+              "example": "OS: Linux; Open ports: 3; Services: ssh,http,https"
+            }
+          ],
+          "when_to_choose": "High-level aggressive scan summary."
+        },
+        "summary": {
+          "fields": [
+            {
+              "name": "os_name",
+              "type": "string"
+            },
+            {
+              "name": "open_ports",
+              "type": "array",
+              "items": "integer"
+            },
+            {
+              "name": "services",
+              "type": "object"
+            },
+            {
+              "name": "script_results",
+              "type": "array",
+              "items": "string",
+              "max_items": 3
+            }
+          ],
+          "when_to_choose": "Combined OS, ports, services, scripts."
+        },
+        "detailed": {
+          "fields": [
+            {
+              "name": "os_details",
+              "type": "object"
+            },
+            {
+              "name": "port_details",
+              "type": "array",
+              "items": "object"
+            },
+            {
+              "name": "script_details",
+              "type": "array",
+              "items": "object"
+            }
+          ],
+          "when_to_choose": "Full aggressive scan details."
+        },
+        "raw": {
+          "fields": [
+            {
+              "name": "raw_pointer",
+              "type": "string"
+            }
+          ],
+          "when_to_choose": "Raw aggressive scan data."
+        }
+      }
+    },
+    {
+      "name": "query_manifest",
+      "signature": "query_manifest(func_name: str) -> dict",
+      "purpose": "Get full details for a specific function from the large manifest.",
+      "cost": 0,
+      "allowed_verbosity": [],
+      "verbosity_map": {}
+    }
+  ],
+  "field_constraints_and_guidelines": {
+    "text_truncation": {
+      "banner_max_chars": 120,
+      "script_excerpt_max_chars": 240,
+      "notes_max_chars": 240
+    },
+    "normalization_rules": [
+      "All free-text fields: normalize whitespace and remove control chars.",
+      "IP/hostnames: replaced by tokens (host_001) in summaries unless operator scope allows real identifiers.",
+      "Confidence floats rounded to 2 decimals.",
+      "Remove null fields from summary objects before sending to LLM."
+    ],
+    "short_keys_option": {
+      "enabled": false,
+      "note": "Adapter may enable short keys (e.g., p, svc) when extreme token optimization required; adapter converts back for trace logs."
+    }
+  },
+  "diffing_and_incremental_rules": {
+    "description": "Adapter should compute diffs vs last scan for the same target and send only new_ports/closed_ports when available.",
+    "keep_change_history_window": "last 5 scan_ids per target",
+    "always_include_new_items": true
+  },
+  "llm_guidance_rules_of_thumb": [
+    "Default to 'summary' for every function call.",
+    "Use 'minimal' when repeating checks frequently or when only novelty matters.",
+    "Request 'detailed' only if 'summary' contains 'new_ports', 'low_confidence', or 'known_vuln_tags'.",
+    "Never request 'raw' unless explicit operator approval is present.",
+    "Prefer diff-aware queries (ask adapter for 'new_ports' / 'changed_services') rather than retrieving full lists."
+  ],
+  "examples": {
+    "top_ports_scan_summary_example": {
+      "input_call": "top_ports_scan(target='host_01', verbosity='summary')",
+      "llm_ready_snippet": "[scan-17] host: host_01; up:true; open_ports:[22,80,443]; services:{22:ssh,80:http,443:https}; notes:\"80: Apache (likely)\""
+    },
+    "service_discovery_detailed_example": {
+      "input_call": "service_discovery(target='host_01', ports=[80,22], verbosity='detailed')",
+      "llm_ready_snippet": "service_details:[{p:80,svc:\"http\",product:\"Apache\",ver:\"2.4.18\",conf:0.9},{p:22,svc:\"ssh\",product:\"OpenSSH\",ver:\"7.2p2\",conf:0.85}] scripts_summary:[{name:\"http-title\",short_summary:\"Example Site\"}]"
+    },
+    "version_detection_cve_example": {
+      "note": "If a CVE is found, only the identifier is returned. Agent must not provide exploit instructions.",
+      "example_output": {
+        "versions": {
+          "80": {
+            "product": "Apache",
+            "version": "2.4.18",
+            "confidence": 0.9
+          }
+        },
+        "known_vuln_tags": [
+          "CVE-2019-0211"
+        ],
+        "evidence": [
+          "server header: Apache/2.4.18"
+        ],
+        "confidence_scores": {
+          "80": 0.9
+        }
+      }
+    }
+  },
+  "safety_and_operational_constraints": {
+    "authorization": "Intrusive functions (e.g., version_detection when attacker-like probes are required) require operator approval. Adapter enforces policy before executing.",
+    "redaction": "All summaries redact full IPs/hostnames unless target is in-scope and operator approval/tokenization policy allows.",
+    "training_notes": "Raw outputs are stored encrypted and must be sanitized before any training dataset is created. Traces used for training must be the sanitized summaries only.",
+    "no_exploit_policy": "The agent must never generate exploit payloads, step-by-step exploitation instructions, or persistence instructions. CVE identifiers may be returned but not exploit methodology."
+  },
+  "developer_notes": {
+    "load_manifest": "LLM agent should load this JSON manifest once at startup and keep it available in short-term memory.",
+    "manifest_usage": "Use function 'purpose', 'cost' and 'when_to_choose' fields to compute a simple policy-driven cost/benefit when selecting function+verbosity.",
+    "adapter_contract": "Adapter must convert raw nmap XML/JSON into the canonical fields described above, compute diffs, sanitize and enforce token budgets before returning results to the LLM."
+  }
+}

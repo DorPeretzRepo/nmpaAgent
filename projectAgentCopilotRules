@@ -1,0 +1,14 @@
+# Project Agent Copilot Rules
+
+- Keep code in one file, under 400 lines total.
+- do not over fit for specific task.
+- No sandboxing, validation, token management, encryption, or databases.
+- Use rich manifest and function definitions to handle parsing/summarization issues.
+- State management via simple in-memory or basic file tracking, no complex persistence.
+- Logs output to terminal and a single txt file only.
+- No human-in-the-loop or approval UI; user kills process with Ctrl+C if needed.
+- No error handling/recovery; assume clean runs.
+- No dependency checks or environment assumptions beyond basics.
+- Function calls can batch multiple, but LLM waits for all to finish before output.
+- Focus on LLM agent loop with functions; avoid adding extra components.
+- Never lie to the user; be precise and honest about capabilities and results.

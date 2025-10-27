@@ -1,0 +1,220 @@
+{
+  "manifest_version": "1.0",
+  "generated_at": "2025-10-09T00:00:00Z",
+  "description": "Short JSON manifest with basic function info. Use query_manifest to get full details.",
+  "functions": [
+    {
+      "name": "ping_discovery",
+      "signature": "ping_discovery(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Confirm reachability and basic responsiveness.",
+      "cost": 1,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "top_ports_scan",
+      "signature": "top_ports_scan(target: str, verbosity: str = \"summary\", ports: list = [common]) -> ScanResultSummary",
+      "purpose": "Fast, low-noise scan of most common TCP ports.",
+      "cost": 2,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "udp_top_ports_scan",
+      "signature": "udp_top_ports_scan(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Scan top common UDP ports (default 50) to reveal services like DNS, SNMP, SSDP.",
+      "cost": 3,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "service_discovery",
+      "signature": "service_discovery(target: str, ports: list, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Retrieve safe banners and identify services on specific ports.",
+      "cost": 3,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "version_detection",
+      "signature": "version_detection(target: str, ports: list, verbosity: str = \"detailed\") -> ScanResultSummary",
+      "purpose": "Conservative version probing and CPE extraction. Slightly more intrusive.",
+      "cost": 4,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ],
+      "safety_note": "If CVE identifiers appear, agent must not produce exploit instructions. CVE IDs are allowed as identifiers only."
+    },
+    {
+      "name": "script_lookup",
+      "signature": "script_lookup(target: str, scripts: list, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Run specified NSE scripts and summarize results.",
+      "cost": 2,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "traceroute_discovery",
+      "signature": "traceroute_discovery(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Get network path/peering information with low noise.",
+      "cost": 1,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "save_raw_output",
+      "signature": "save_raw_output(scan_id: str, encrypt: bool = true) -> {raw_pointer, size_bytes, encrypted, checksum}",
+      "purpose": "Utility: persist raw scan output encrypted and return pointer metadata.",
+      "cost": 0,
+      "allowed_verbosity": [
+        "raw"
+      ]
+    },
+    {
+      "name": "os_detection",
+      "signature": "os_detection(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Detect the operating system of the target host.",
+      "cost": 3,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "full_port_scan",
+      "signature": "full_port_scan(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Scan all 65535 ports on the target.",
+      "cost": 5,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "aggressive_scan",
+      "signature": "aggressive_scan(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Perform aggressive scan including OS detection, version probing, and safe scripts.",
+      "cost": 5,
+      "allowed_verbosity": [
+        "minimal",
+        "summary",
+        "detailed",
+        "raw"
+      ]
+    },
+    {
+      "name": "snmp_probe",
+      "signature": "snmp_probe(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Probe UDP 161 with safe SNMP info scripts to gather device/OS/interface data (read-only).",
+      "cost": 2,
+      "allowed_verbosity": ["minimal","summary","detailed","raw"],
+      "safety_note": "No community string brute forcing; only information scripts."
+    },
+    {
+      "name": "upnp_probe",
+      "signature": "upnp_probe(target: str, verbosity: str = \"summary\") -> ScanResultSummary",
+      "purpose": "Send SSDP/UPnP info queries on UDP 1900 for device model & service metadata (non-intrusive).",
+      "cost": 2,
+      "allowed_verbosity": ["minimal","summary","detailed","raw"],
+      "safety_note": "Read-only UPnP info collection only."
+    },
+    {
+      "name": "query_manifest",
+      "signature": "query_manifest(func_name: str) -> dict",
+      "purpose": "Get full details for a specific function from the large manifest.",
+      "cost": 0,
+      "allowed_verbosity": []
+    }
+  ],
+  "field_constraints_and_guidelines": {
+    "text_truncation": {
+      "banner_max_chars": 120,
+      "script_excerpt_max_chars": 240,
+      "notes_max_chars": 240
+    },
+    "normalization_rules": [
+      "All free-text fields: normalize whitespace and remove control chars.",
+      "IP/hostnames: replaced by tokens (host_001) in summaries unless operator scope allows real identifiers.",
+      "Confidence floats rounded to 2 decimals.",
+      "Remove null fields from summary objects before sending to LLM."
+    ],
+    "short_keys_option": {
+      "enabled": false,
+      "note": "Adapter may enable short keys (e.g., p, svc) when extreme token optimization required; adapter converts back for trace logs."
+    }
+  },
+  "diffing_and_incremental_rules": {
+    "description": "Adapter should compute diffs vs last scan for the same target and send only new_ports/closed_ports when available.",
+    "keep_change_history_window": "last 5 scan_ids per target",
+    "always_include_new_items": true
+  },
+  "llm_guidance_rules_of_thumb": [
+    "Default to 'summary' for every function call.",
+    "Use 'minimal' when repeating checks frequently or when only novelty matters.",
+    "Request 'detailed' only if 'summary' contains 'new_ports', 'low_confidence', or 'known_vuln_tags'.",
+    "Never request 'raw' unless explicit operator approval is present.",
+    "Prefer diff-aware queries (ask adapter for 'new_ports' / 'changed_services') rather than retrieving full lists."
+  ],
+  "examples": {
+    "top_ports_scan_summary_example": {
+      "input_call": "top_ports_scan(target='host_01', verbosity='summary')",
+      "llm_ready_snippet": "[scan-17] host: host_01; up:true; open_ports:[22,80,443]; services:{22:ssh,80:http,443:https}; notes:\"80: Apache (likely)\""
+    },
+    "service_discovery_detailed_example": {
+      "input_call": "service_discovery(target='host_01', ports=[80,22], verbosity='detailed')",
+      "llm_ready_snippet": "service_details:[{p:80,svc:\"http\",product:\"Apache\",ver:\"2.4.18\",conf:0.9},{p:22,svc:\"ssh\",product:\"OpenSSH\",ver:\"7.2p2\",conf:0.85}] scripts_summary:[{name:\"http-title\",short_summary:\"Example Site\"}]"
+    },
+    "version_detection_cve_example": {
+      "note": "If a CVE is found, only the identifier is returned. Agent must not provide exploit instructions.",
+      "example_output": {
+        "versions": {
+          "80": {
+            "product": "Apache",
+            "version": "2.4.18",
+            "confidence": 0.9
+          }
+        },
+        "known_vuln_tags": [
+          "CVE-2019-0211"
+        ],
+        "evidence": [
+          "server header: Apache/2.4.18"
+        ],
+        "confidence_scores": {
+          "80": 0.9
+        }
+      }
+    }
+  }
+}
