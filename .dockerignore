@@ -1,0 +1,8 @@
+.git
+__pycache__/
+*.pyc
+*.db
+log.txt
+agent_intelligence.json
+vendors_cache.json
+ports_history.json
